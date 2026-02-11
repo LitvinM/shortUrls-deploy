@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using test_Avtobus1.Models;
 using test_Avtobus1.Services;
 
@@ -9,13 +10,13 @@ public class HomeController : Controller
 {
     private readonly AppDbContext _db;
     private readonly UrlService _service;
-    private readonly UrlValidator _validator;
-
-    public HomeController(AppDbContext db, UrlService service, UrlValidator validator)
+    private readonly IOptions<ShortUrlOptions> _options;
+    
+    public HomeController(AppDbContext db, UrlService service, IOptions<ShortUrlOptions> options)
     {
         _db = db;
         _service = service;
-        _validator = validator;
+        _options = options;
     }
 
     public async Task<IActionResult> Index()
@@ -25,19 +26,14 @@ public class HomeController : Controller
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync();
 
+        ViewBag.ShortBaseDomain = _options.Value.BaseDomain.TrimEnd('/');
+
         return View(items);
     }
 
     [HttpPost]
     public async Task<IActionResult> Create(string originalUrl)
     {
-        if (!_validator.IsValid(originalUrl))
-        {
-            TempData["Error"] = 
-                "Некорректный URL. Разрешены только http://, https:// или домен вида example.com";
-            return RedirectToAction(nameof(Index));
-        }
-
         await _service.CreateAsync(originalUrl.Trim());
         return RedirectToAction(nameof(Index));
     }
@@ -73,4 +69,20 @@ public class HomeController : Controller
 
         return RedirectToAction(nameof(Index));
     }
+    
+    [HttpGet("{shortCode}")]
+    public async Task<IActionResult> RedirectToOriginal(string shortCode)
+    {
+        var entity = await _db.ShortUrls
+            .FirstOrDefaultAsync(x => x.ShortCode == shortCode);
+
+        if (entity == null)
+            return NotFound();
+
+        entity.ClickCount++;
+        await _db.SaveChangesAsync();
+
+        return Redirect(entity.OriginalUrl);
+    }
+    
 }

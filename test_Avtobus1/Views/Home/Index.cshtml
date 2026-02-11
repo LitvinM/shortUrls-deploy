@@ -28,13 +28,20 @@
     <tbody>
     @foreach (var item in Model)
     {
-        var shortUrl = $"{Context.Request.Scheme}://{Context.Request.Host}/{item.ShortCode}";
+        var baseDomain = ViewBag.ShortBaseDomain as string;
         <tr>
             <td style="max-width:400px; word-break:break-all;">
                 @item.OriginalUrl
             </td>
             <td>
-                <a href="@shortUrl" target="_blank">@shortUrl</a>
+                @{
+                    var displayUrl = $"{baseDomain}/{item.ShortCode}";
+                    var localRedirectUrl = Url.Content($"/{item.ShortCode}");
+                }
+                
+                <a href="@localRedirectUrl" target="_blank">
+                    @displayUrl
+                </a>
             </td>
             <td>
                 @item.CreatedAt.ToString("yyyy-MM-dd HH:mm")

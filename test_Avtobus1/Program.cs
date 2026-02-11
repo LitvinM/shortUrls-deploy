@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using test_Avtobus1;
+using test_Avtobus1.Models;
 using test_Avtobus1.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,8 +17,11 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddControllersWithViews();
 
+builder.Services.Configure<ShortUrlOptions>(
+    builder.Configuration.GetSection("ShortUrl"));
+
+
 builder.Services.AddScoped<UrlService>();
-builder.Services.AddScoped<UrlValidator>();
 
 var app = builder.Build();
 
@@ -47,3 +51,6 @@ app.MapControllerRoute(
 
 
 app.Run();
+
+//Для работы redirect тестов
+public partial class Program { }

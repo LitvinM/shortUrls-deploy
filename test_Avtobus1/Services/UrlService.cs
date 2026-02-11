@@ -18,12 +18,6 @@ public class UrlService
 
     public async Task<ShortUrl> CreateAsync(string originalUrl)
     {
-        var existing = await _db.ShortUrls
-            .FirstOrDefaultAsync(x => x.OriginalUrl == originalUrl);
-
-        if (existing != null)
-            return existing;
-        
         var shortCode = await GenerateUniqueCodeAsync();
 
         var entity = new ShortUrl
